@@ -11,6 +11,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { EditorTooltipManager } from '../components/free_tooltip';
 import { IEditorChange } from '../virtual/editor';
+import { string_to_markdown } from './documentation/documentation';
 
 export class SignatureCM extends CodeMirrorIntegration {
   protected signature_character: IRootPosition;
@@ -53,32 +54,12 @@ export class SignatureCM extends CodeMirrorIntegration {
         typeof item.documentation === 'string' ||
         item.documentation.kind === 'plaintext'
       ) {
-        let in_text_block = false;
-        // TODO: make use of the MarkupContent object instead
-        for (let line of item.documentation.toString().split('\n')) {
-          if (line.trim() === item.label.trim()) {
-            continue;
-          }
-
-          if (line.startsWith('>>>')) {
-            if (in_text_block) {
-              markdown += '```\n\n';
-              in_text_block = false;
-            }
-            line = '```' + language + '\n' + line.substr(3) + '\n```';
-          } else {
-            // start new text block
-            if (!in_text_block) {
-              markdown += '```\n';
-              in_text_block = true;
-            }
-          }
-          markdown += line + '\n';
-        }
-        // close off the text block - if any
-        if (in_text_block) {
-          markdown += '```';
-        }
+        markdown += string_to_markdown(
+          item.documentation.toString(),
+          language,
+          item.label,
+          true
+        );
       } else {
         if (item.documentation.kind !== 'markdown') {
           this.console.warn(

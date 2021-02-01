@@ -67,7 +67,8 @@ export class LazyCompletionItem implements CompletionHandler.ICompletionItem {
     public icon: LabIcon,
     private match: lsProtocol.CompletionItem,
     private connector: LSPConnector,
-    private uri: string
+    private uri: string,
+    public readonly language: string
   ) {
     this._setDocumentation(match.documentation);
     this._requested_resolution = false;
@@ -454,7 +455,8 @@ export class LSPConnector
         this.icon_for(kind),
         match,
         this,
-        document.uri
+        document.uri,
+        document.language
       );
 
       // Update prefix values

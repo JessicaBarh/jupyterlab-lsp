@@ -7,6 +7,7 @@ import { Signal } from '@lumino/signaling';
 import { LazyCompletionItem } from './completion_handler';
 import { IRenderMime } from '@jupyterlab/rendermime';
 import { ILSPLogConsole } from '../../tokens';
+import { string_to_markdown } from '../documentation/documentation';
 
 export class LSPCompletionRenderer
   extends Completer.Renderer
@@ -51,11 +52,24 @@ export class LSPCompletionRenderer
   }
 
   createDocumentationNode(item: LazyCompletionItem): HTMLElement {
-    if (item.isDocumentationMarkdown) {
+    if (
+      item.isDocumentationMarkdown ||
+      this.options.integrator.settings.composite.coerceDocumentationToMarkdown
+    ) {
+      let documentation: string;
+      if (item.isDocumentationMarkdown) {
+        documentation = item.documentation;
+      } else {
+        documentation = string_to_markdown(
+          item.documentation,
+          item.language || '',
+          item.label
+        );
+      }
       this.options.markdownRenderer
         .renderModel({
           data: {
-            'text/markdown': item.documentation
+            'text/markdown': documentation
           },
           trusted: false,
           metadata: {},
@@ -63,10 +77,18 @@ export class LSPCompletionRenderer
             // empty
           }
         })
+        .then(() => {
+          if (this.options.latexTypesetter && documentation.includes('$')) {
+            this.options.latexTypesetter.typeset(
+              this.options.markdownRenderer.node
+            );
+          }
+        })
         .catch(this.options.console.warn);
+
       return this.options.markdownRenderer.node;
     } else {
-      let node = document.createElement('div');
+      let node = document.createElement('pre');
       node.textContent = item.documentation;
       return node;
     }
@@ -77,6 +99,7 @@ export namespace LSPCompletionRenderer {
   export interface IOptions {
     integrator: CompletionLabIntegration;
     markdownRenderer: IRenderMime.IRenderer;
+    latexTypesetter?: IRenderMime.ILatexTypesetter;
     console: ILSPLogConsole;
   }
 }

@@ -24,7 +24,21 @@
   overflow: auto;
 }
 
+/* a workaround for code being larger font size than text in markdown-rendered panel */
+.jp-Completer-docpanel pre code {
+  font-size: 90%;
+}
+
+.jp-Completer-docpanel .lsp-signatures summary {
+  color: var(--jp-ui-font-color2);
+}
+
 .lsp-completer-placeholder:after {
   content: 'Loading...';
   color: #7f7f7f;
+}
+
+.jp-Completer-docpanel .jp-RenderedHTMLCommon p {
+  margin-bottom: 0.5em;
+  margin-top: 0.5em;
 }

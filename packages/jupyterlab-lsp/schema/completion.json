@@ -38,6 +38,12 @@
       "type": "boolean",
       "description": "Should an attempt to get the kernel response (with timeout as specified by kernelResponseTimeout) be made if kernel is busy? If you often write code in notebook while computations are running for long time (e.g. training models), turning this off might give you faster response times."
     },
+    "coerceDocumentationToMarkdown": {
+      "title": "Coerce documentation to Markdown",
+      "default": true,
+      "type": "boolean",
+      "description": "Should attempt to auto-detect the code in the documentation string and convert to Markdown, even if provided as a raw string rather than markup?"
+    },
     "theme": {
       "title": "Completer theme",
       "type": ["string", "null"],
