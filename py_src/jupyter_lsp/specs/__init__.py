@@ -8,6 +8,7 @@ from .javascript_typescript_langserver import JavascriptTypescriptLanguageServer
 from .pyls import PythonLanguageServer
 from .r_languageserver import RLanguageServer
 from .sql_language_server import SQLLanguageServer
+from .julia_language_server import JuliaLanguageServer
 from .texlab import Texlab
 from .unified_language_server import UnifiedLanguageServer
 from .vscode_css_languageserver import VSCodeCSSLanguageServer
@@ -20,6 +21,7 @@ css = VSCodeCSSLanguageServer()
 dockerfile = DockerfileLanguageServerNodeJS()
 html = VSCodeHTMLLanguageServer()
 json = VSCodeJSONLanguageServer()
+julia = JuliaLanguageServer()
 md = UnifiedLanguageServer()
 py = PythonLanguageServer()
 r = RLanguageServer()
