@@ -19,7 +19,6 @@ import { IEditorMimeTypeService } from '@jupyterlab/codeeditor';
 import { IEditorServices } from '@jupyterlab/codeeditor';
 import { CodeSyntax as LSPSyntaxHighlightingSettings } from '../_syntax_highlighting';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { ITranslator } from '@jupyterlab/translation';
 
 export const syntaxHighlightingIcon = new LabIcon({
   name: 'lsp:syntax-highlighting',
@@ -117,22 +116,15 @@ class SyntaxLabIntegration implements IFeatureLabIntegration {
 
 export const SYNTAX_HIGHLIGHTING_PLUGIN: JupyterFrontEndPlugin<void> = {
   id: FEATURE_ID,
-  requires: [
-    ILSPFeatureManager,
-    IEditorServices,
-    ISettingRegistry,
-    ITranslator
-  ],
+  requires: [ILSPFeatureManager, IEditorServices, ISettingRegistry],
   autoStart: true,
   activate: (
     app: JupyterFrontEnd,
     featureManager: ILSPFeatureManager,
     editorServices: IEditorServices,
-    settingRegistry: ISettingRegistry,
-    translator: ITranslator
+    settingRegistry: ISettingRegistry
   ) => {
     const settings = new FeatureSettings(settingRegistry, FEATURE_ID);
-    const trans = translator.load('jupyterlab-lsp');
 
     featureManager.register({
       feature: {
@@ -141,7 +133,7 @@ export const SYNTAX_HIGHLIGHTING_PLUGIN: JupyterFrontEndPlugin<void> = {
         ]),
         commands: [],
         id: FEATURE_ID,
-        name: trans.__('Syntax highlighting'),
+        name: 'Syntax highlighting',
         labIntegration: new SyntaxLabIntegration(
           editorServices.mimeTypeService
         ),

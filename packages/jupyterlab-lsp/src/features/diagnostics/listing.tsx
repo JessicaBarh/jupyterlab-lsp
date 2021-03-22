@@ -16,7 +16,6 @@ import { IDocumentWidget } from '@jupyterlab/docregistry';
 import { DocumentLocator, focus_on } from '../../components/utils';
 import { FeatureSettings } from '../../feature';
 import { CodeDiagnostics as LSPDiagnosticsSettings } from '../../_diagnostics';
-import { TranslationBundle } from '@jupyterlab/translation';
 
 /**
  * Diagnostic which is localized at a specific editor (cell) within a notebook
@@ -112,7 +111,7 @@ function SortableTH(props: {
       className={is_sort_key ? 'lsp-sorted-header' : null}
     >
       <div>
-        <label>{trans.__(props.name)}</label>
+        <label>{props.name}</label>
         <sortIcon.react tag="span" className="lsp-sort-icon" />
       </div>
     </th>
@@ -224,7 +223,7 @@ export class DiagnosticsListing extends VDomRenderer<DiagnosticsListing.Model> {
     const editor = this.model.virtual_editor;
     const adapter = this.model.adapter;
     if (!diagnostics_db || editor == null) {
-      return <div>{trans.__('No issues detected, great job!')}</div>;
+      return <div>No issues detected, great job!</div>;
     }
 
     let by_document = Array.from(diagnostics_db).map(
@@ -315,8 +314,6 @@ export class DiagnosticsListing extends VDomRenderer<DiagnosticsListing.Model> {
   }
 }
 
-let trans: TranslationBundle;
-
 export namespace DiagnosticsListing {
   /**
    * A VDomModel for the LSP of current file editor/notebook.
@@ -328,9 +325,8 @@ export namespace DiagnosticsListing {
     settings: FeatureSettings<LSPDiagnosticsSettings>;
     status_message: StatusMessage;
 
-    constructor(translator_bundle: TranslationBundle) {
+    constructor() {
       super();
-      trans = translator_bundle;
     }
   }
 }
