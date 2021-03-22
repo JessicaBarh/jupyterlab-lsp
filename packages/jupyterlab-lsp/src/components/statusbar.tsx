@@ -36,6 +36,7 @@ import { INotebookModel, NotebookPanel } from '@jupyterlab/notebook';
 import { LanguageServerManager } from '../manager';
 import { codeCheckIcon, codeClockIcon, codeWarningIcon } from './icons';
 import { Dialog, showDialog } from '@jupyterlab/apputils';
+import { TranslationBundle } from '@jupyterlab/translation';
 import { SERVER_EXTENSION_404 } from '../errors';
 import okButton = Dialog.okButton;
 
@@ -138,14 +139,17 @@ class LSPPopup extends VDomRenderer<LSPStatus.Model> {
 
           let status = '';
           if (connection?.isInitialized) {
-            status = 'initialized';
+            status = this.model.trans.__('initialized');
           } else if (connection?.isConnected) {
-            status = 'connected';
+            status = this.model.trans.__('connected');
           } else {
-            status = 'not connected';
+            status = this.model.trans.__('not connected');
           }
 
-          const icon = status === 'initialized' ? circleIcon : circleEmptyIcon;
+          const icon =
+            status === this.model.trans.__('initialized')
+              ? circleIcon
+              : circleEmptyIcon;
 
           return (
             <li key={i}>
@@ -191,12 +195,14 @@ class LSPPopup extends VDomRenderer<LSPStatus.Model> {
     return (
       <div className={'lsp-popover-content'}>
         <div className={'lsp-servers-menu'}>
-          <h3 className={'lsp-servers-title'}>LSP servers</h3>
+          <h3 className={'lsp-servers-title'}>
+            {this.model.trans.__('LSP servers')}
+          </h3>
           <div className={'lsp-servers-lists'}>
             {servers_available.length ? (
               <CollapsibleList
                 key={'available'}
-                title={'Available'}
+                title={this.model.trans.__('Available')}
                 list={servers_available}
                 startCollapsed={true}
               />
@@ -206,7 +212,7 @@ class LSPPopup extends VDomRenderer<LSPStatus.Model> {
             {running_servers.length ? (
               <CollapsibleList
                 key={'running'}
-                title={'Running'}
+                title={this.model.trans.__('Running')}
                 list={running_servers}
               />
             ) : (
@@ -215,7 +221,7 @@ class LSPPopup extends VDomRenderer<LSPStatus.Model> {
             {missing_languages.length ? (
               <CollapsibleList
                 key={'missing'}
-                title={'Missing'}
+                title={this.model.trans.__('Missing')}
                 list={missing_languages}
               />
             ) : (
@@ -224,7 +230,7 @@ class LSPPopup extends VDomRenderer<LSPStatus.Model> {
           </div>
         </div>
         <div className={'lsp-popover-status'}>
-          Documentation:{' '}
+          {this.model.trans.__('Documentation:')}{' '}
           <a
             href={
               'https://jupyterlab-lsp.readthedocs.io/en/latest/Language%20Servers.html'
@@ -232,7 +238,7 @@ class LSPPopup extends VDomRenderer<LSPStatus.Model> {
             target="_blank"
             rel="noreferrer"
           >
-            Language Servers
+            {this.model.trans.__('Language Servers')}
           </a>
         </div>
       </div>
@@ -248,18 +254,20 @@ const SELECTED_CLASS = 'jp-mod-selected';
 export class LSPStatus extends VDomRenderer<LSPStatus.Model> {
   protected _popup: Popup = null;
   private interactiveStateObserver: MutationObserver;
-
+  private trans: TranslationBundle;
   /**
    * Construct a new VDomRenderer for the status item.
    */
   constructor(
     widget_manager: ILSPAdapterManager,
-    protected displayText: boolean = true
+    protected displayText: boolean = true,
+    trans: TranslationBundle
   ) {
-    super(new LSPStatus.Model(widget_manager));
+    super(new LSPStatus.Model(widget_manager, trans));
     this.addClass(interactiveItem);
     this.addClass('lsp-statusbar-item');
-    this.title.caption = 'LSP status';
+    this.trans = trans;
+    this.title.caption = this.trans.__('LSP status');
 
     // add human-readable (and stable) class name reflecting otherwise obfuscated typestyle interactiveItem
     this.interactiveStateObserver = new MutationObserver(() => {
@@ -306,7 +314,7 @@ export class LSPStatus extends VDomRenderer<LSPStatus.Model> {
         <this.model.status_icon.react
           top={'2px'}
           kind={'statusBar'}
-          title={'LSP Code Intelligence'}
+          title={this.trans.__('LSP Code Intelligence')}
         />
         {this.displayText ? (
           <TextItem source={this.model.short_message} />
@@ -322,9 +330,9 @@ export class LSPStatus extends VDomRenderer<LSPStatus.Model> {
     }
     if (this.model.status.status == 'no_server_extension') {
       showDialog({
-        title: 'LSP server extension not found',
+        title: this.trans.__('LSP server extension not found'),
         body: SERVER_EXTENSION_404,
-        buttons: [okButton()]
+        buttons: [okButton({ label: this.trans.__('OK') })]
       }).catch(console.warn);
     } else {
       this._popup = showPopup({
@@ -343,6 +351,7 @@ export class StatusButtonExtension
       language_server_manager: LanguageServerManager;
       connection_manager: DocumentConnectionManager;
       adapter_manager: ILSPAdapterManager;
+      translator_bundle: TranslationBundle;
     }
   ) {}
 
@@ -352,7 +361,8 @@ export class StatusButtonExtension
   createItem(displayText: boolean = true): LSPStatus {
     const status_bar_item = new LSPStatus(
       this.options.adapter_manager,
-      displayText
+      displayText,
+      this.options.translator_bundle
     );
     status_bar_item.model.language_server_manager = this.options.language_server_manager;
     status_bar_item.model.connection_manager = this.options.connection_manager;
@@ -434,10 +444,15 @@ export namespace LSPStatus {
   export class Model extends VDomModel {
     server_extension_status: SCHEMA.ServersResponse = null;
     language_server_manager: ILanguageServerManager;
+    trans: TranslationBundle;
     private _connection_manager: DocumentConnectionManager;
 
-    constructor(widget_adapter_manager: ILSPAdapterManager) {
+    constructor(
+      widget_adapter_manager: ILSPAdapterManager,
+      trans: TranslationBundle
+    ) {
       super();
+      this.trans = trans;
       widget_adapter_manager.adapterChanged.connect((manager, adapter) => {
         this.change_adapter(adapter);
       }, this);
@@ -631,9 +646,9 @@ export namespace LSPStatus {
 
     get short_message(): string {
       if (!this.adapter) {
-        return 'not initialized';
+        return this.trans.__('not initialized');
       }
-      return shortMessageByStatus[this.status.status];
+      return this.trans.__(shortMessageByStatus[this.status.status]);
     }
 
     get feature_message(): string {
@@ -642,15 +657,19 @@ export namespace LSPStatus {
 
     get long_message(): string {
       if (!this.adapter) {
-        return 'not initialized';
+        return this.trans.__('not initialized');
       }
       let status = this.status;
       let msg = '';
-      const plural = status.detected_documents.size > 1 ? 's' : '';
       if (status.status === 'waiting') {
-        msg = 'Waiting for documents initialization...';
+        msg = this.trans.__('Waiting for documents initialization...');
       } else if (status.status === 'initialized') {
-        msg = `Fully connected & initialized (${status.detected_documents.size} virtual document${plural})`;
+        msg = this.trans._n(
+          'Fully connected & initialized (%2 virtual document)',
+          'Fully connected & initialized (%2 virtual document)',
+          status.detected_documents.size,
+          status.detected_documents.size
+        );
       } else if (status.status === 'initializing') {
         const uninitialized = new Set<VirtualDocument>(
           status.detected_documents
@@ -658,25 +677,30 @@ export namespace LSPStatus {
         for (let initialized of status.initialized_documents.values()) {
           uninitialized.delete(initialized);
         }
-        // servers for n documents did not respond ot the initialization request
-        msg = `Fully connected, but ${uninitialized.size}/${
-          status.detected_documents.size
-        } virtual document${plural} stuck uninitialized: ${[...uninitialized]
-          .map(document => document.id_path)
-          .join(', ')}`;
+        // servers for n documents did not respond to the initialization request
+        msg = this.trans.__(
+          'Fully connected, but %2/%3 virtual document stuck uninitialized: %4',
+          'Fully connected, but %2/%3 virtual documents stuck uninitialized: %4',
+          status.detected_documents.size,
+          uninitialized.size,
+          status.detected_documents.size,
+          [...uninitialized].map(document => document.id_path).join(', ')
+        );
       } else {
         const unconnected = new Set<VirtualDocument>(status.detected_documents);
         for (let connected of status.connected_documents.values()) {
           unconnected.delete(connected);
         }
 
-        msg = `${status.connected_documents.size}/${
-          status.detected_documents.size
-        } virtual document${plural} connected (${
-          status.open_connections.length
-        } connections; waiting for: ${[...unconnected]
-          .map(document => document.id_path)
-          .join(', ')})`;
+        msg = this.trans.__(
+          '%2/%3 virtual document connected (%4 connections; waiting for: %5)',
+          '%2/%3 virtual documents connected (%4 connections; waiting for: %5)',
+          status.detected_documents.size,
+          status.connected_documents.size,
+          status.detected_documents.size,
+          status.open_connections.length,
+          [...unconnected].map(document => document.id_path).join(', ')
+        );
       }
       return msg;
     }
