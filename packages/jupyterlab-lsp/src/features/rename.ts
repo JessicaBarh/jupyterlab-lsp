@@ -16,11 +16,6 @@ import { CodeMirrorVirtualEditor } from '../virtual/codemirror_editor';
 import { LabIcon } from '@jupyterlab/ui-components';
 import renameSvg from '../../style/icons/rename.svg';
 import { FEATURE_ID as DIAGNOSTICS_PLUGIN_ID } from './diagnostics';
-import {
-  ITranslator,
-  nullTranslator,
-  TranslationBundle
-} from '@jupyterlab/translation';
 
 export const renameIcon = new LabIcon({
   name: 'lsp:rename',
@@ -29,7 +24,7 @@ export const renameIcon = new LabIcon({
 
 const FEATURE_ID = PLUGIN_ID + ':rename';
 
-const COMMANDS = (trans: TranslationBundle): IFeatureCommand[] => [
+const COMMANDS: IFeatureCommand[] = [
   {
     id: 'rename-symbol',
     execute: async ({
@@ -40,8 +35,6 @@ const COMMANDS = (trans: TranslationBundle): IFeatureCommand[] => [
       features
     }) => {
       const rename_feature = features.get(FEATURE_ID) as RenameCM;
-      rename_feature.setTrans(trans);
-
       let root_position = rename_feature.transform_virtual_position_to_root_position(
         virtual_position
       );
@@ -63,17 +56,16 @@ const COMMANDS = (trans: TranslationBundle): IFeatureCommand[] => [
         }
 
         if (!status) {
-          status = trans.__(`Rename failed: %1`, error);
+          status = `Rename failed: ${error}`;
         }
 
         rename_feature.setStatus(status, 7.5 * 1000);
       };
 
       const dialog_value = await InputDialog.getText({
-        title: trans.__('Rename to'),
+        title: 'Rename to',
         text: old_value,
-        okLabel: trans.__('Rename'),
-        cancelLabel: trans.__('Cancel')
+        okLabel: 'Rename'
       });
 
       try {
@@ -83,7 +75,7 @@ const COMMANDS = (trans: TranslationBundle): IFeatureCommand[] => [
         }
         let new_value = dialog_value.value;
         rename_feature.setStatus(
-          trans.__('Renaming %1 to %2...', old_value, new_value),
+          `Renaming ${old_value} to ${new_value}...`,
           2 * 1000
         );
         const edit = await connection.rename(
@@ -98,17 +90,12 @@ const COMMANDS = (trans: TranslationBundle): IFeatureCommand[] => [
       }
     },
     is_enabled: ({ connection }) => connection.isRenameSupported(),
-    label: trans.__('Rename symbol'),
+    label: 'Rename symbol',
     icon: renameIcon
   }
 ];
 
 export class RenameCM extends CodeMirrorIntegration {
-  
-  public setTrans(trans: TranslationBundle){
-    this.trans = trans;
-  }
-
   public setStatus(message: string, timeout: number) {
     return this.status_message.set(message, timeout);
   }
@@ -123,41 +110,33 @@ export class RenameCM extends CodeMirrorIntegration {
     try {
       outcome = await this.apply_edit(workspaceEdit);
     } catch (error) {
-      this.status_message.set(this.trans.__('Rename failed: %1', error));
+      this.status_message.set(`Rename failed: ${error}`);
       return outcome;
     }
 
     try {
       let status: string;
-      const change_text = this.trans.__('%1 to %2', old_value, new_value);
+      let is_plural: boolean;
+      const change_text = `${old_value} to ${new_value}`;
 
       if (outcome.appliedChanges === 0) {
-        status = this.trans.__(
-          'Could not rename %1 - consult the language server documentation',
-          change_text
-        );
+        status = `Could not rename ${change_text} - consult the language server documentation`;
       } else if (outcome.wasGranular) {
-        status = this.trans._n(
-          'Renamed %2 in %3 place',
-          'Renamed %2 in %3 places',
-          outcome.appliedChanges,
-          change_text,
-          outcome.appliedChanges
-        );
+        is_plural = outcome.appliedChanges > 1;
+        status = `Renamed ${change_text} in ${outcome.appliedChanges} place${
+          is_plural ? 's' : ''
+        }`;
       } else if (this.adapter.has_multiple_editors) {
-        status = this.trans._n(
-          'Renamed %2 in %3 cell',
-          'Renamed %2 in %3 cells',
-          outcome.modifiedCells,
-          change_text,
-          outcome.modifiedCells
-        );
+        is_plural = outcome.modifiedCells > 1;
+        status = `Renamed ${change_text} in ${outcome.modifiedCells} cell${
+          is_plural ? 's' : ''
+        }`;
       } else {
-        status = this.trans.__('Renamed %1', change_text);
+        status = `Renamed ${change_text}`;
       }
 
       if (outcome.errors.length !== 0) {
-        status += this.trans.__(' with errors: %1', outcome.errors);
+        status += ` with errors: ${outcome.errors}`;
       }
 
       this.status_message.set(status, 5 * 1000);
@@ -213,40 +192,26 @@ export class RenameCM extends CodeMirrorIntegration {
             let { index: editor_id } = editor.find_editor(diagnostic.editor);
             let cell_number = editor_id + 1;
             // TODO: should we show "code cell" numbers, or just cell number?
-            return rename_feature.trans.__(
-              '%1 in cell %2 at line %3',
-              message,
-              cell_number,
-              start.line
-            );
+            return `${message} in cell ${cell_number} at line ${start.line}`;
           } else {
-            return rename_feature.trans.__(
-              '%1 at line %2',
-              message,
-              start.line
-            );
+            return `${message} at line ${start.line}`;
           }
         })
       )
     ].join(', ');
-    return rename_feature.trans.__(
-      'Syntax error(s) prevent rename: %1',
-      dire_errors
-    );
+    return `Syntax error(s) prevent rename: ${dire_errors}`;
   }
 }
 
 export const RENAME_PLUGIN: JupyterFrontEndPlugin<void> = {
   id: FEATURE_ID,
-  requires: [ILSPFeatureManager, ISettingRegistry, ITranslator],
+  requires: [ILSPFeatureManager, ISettingRegistry],
   autoStart: true,
   activate: (
     app: JupyterFrontEnd,
     featureManager: ILSPFeatureManager,
-    settingRegistry: ISettingRegistry,
-    translator: ITranslator
+    settingRegistry: ISettingRegistry
   ) => {
-    const trans = (translator || nullTranslator).load('jupyterlab-lsp');
     const settings = new FeatureSettings(settingRegistry, FEATURE_ID);
 
     featureManager.register({
@@ -255,7 +220,7 @@ export const RENAME_PLUGIN: JupyterFrontEndPlugin<void> = {
         id: FEATURE_ID,
         name: 'LSP Rename',
         settings: settings,
-        commands: COMMANDS(trans)
+        commands: COMMANDS
       }
     });
   }

@@ -10,11 +10,10 @@ import {
   DiagnosticsCM,
   diagnosticsIcon
 } from './diagnostics';
-import { ITranslator, TranslationBundle } from '@jupyterlab/translation';
 
 export const FEATURE_ID = PLUGIN_ID + ':diagnostics';
 
-const COMMANDS = (trans: TranslationBundle): IFeatureCommand[] => [
+const COMMANDS: IFeatureCommand[] = [
   {
     id: 'show-diagnostics-panel',
     execute: ({ app, features, adapter }) => {
@@ -26,6 +25,7 @@ const COMMANDS = (trans: TranslationBundle): IFeatureCommand[] => [
       }
 
       const panel_widget = diagnostics_panel.widget;
+
       if (!panel_widget.isAttached) {
         app.shell.add(panel_widget, 'main', {
           ref: adapter.widget_id,
@@ -37,7 +37,7 @@ const COMMANDS = (trans: TranslationBundle): IFeatureCommand[] => [
     is_enabled: context => {
       return context.app.name != 'JupyterLab Classic';
     },
-    label: trans.__('Show diagnostics panel'),
+    label: 'Show diagnostics panel',
     rank: 3,
     icon: diagnosticsIcon
   }
@@ -45,16 +45,14 @@ const COMMANDS = (trans: TranslationBundle): IFeatureCommand[] => [
 
 export const DIAGNOSTICS_PLUGIN: JupyterFrontEndPlugin<void> = {
   id: FEATURE_ID,
-  requires: [ILSPFeatureManager, ISettingRegistry, ITranslator],
+  requires: [ILSPFeatureManager, ISettingRegistry],
   autoStart: true,
   activate: (
     app: JupyterFrontEnd,
     featureManager: ILSPFeatureManager,
-    settingRegistry: ISettingRegistry,
-    translator: ITranslator
+    settingRegistry: ISettingRegistry
   ) => {
     const settings = new FeatureSettings(settingRegistry, FEATURE_ID);
-    const trans = translator.load('jupyterlab-lsp');
 
     featureManager.register({
       feature: {
@@ -64,7 +62,7 @@ export const DIAGNOSTICS_PLUGIN: JupyterFrontEndPlugin<void> = {
         id: FEATURE_ID,
         name: 'LSP Diagnostics',
         settings: settings,
-        commands: COMMANDS(trans)
+        commands: COMMANDS
       }
     });
   }

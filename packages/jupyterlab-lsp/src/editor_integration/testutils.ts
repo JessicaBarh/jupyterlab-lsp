@@ -1,4 +1,3 @@
-import { ITranslator } from '@jupyterlab/translation';
 import {
   CodeMirrorEditor,
   CodeMirrorEditorFactory,
@@ -102,7 +101,6 @@ export class MockExtension implements ILSPExtension {
   foreign_code_extractors: IForeignCodeExtractorsRegistry;
   code_overrides: ICodeOverridesRegistry;
   console: ILSPLogConsole;
-  translator: ITranslator;
 
   constructor() {
     this.app = null;
