@@ -118,5 +118,4 @@ _build
 .virtual_documents/
 
 # Built labextensions
-python_packages/jupyterlab_lsp/jupyterlab_lsp/labextensions/@krassowski/jupyterlab-lsp/schemas
-# python_packages/jupyterlab_lsp/jupyterlab_lsp/labextensions/@krassowski/jupyterlab-lsp/static
+# python_packages/jupyterlab_lsp/jupyterlab_lsp/labextensions/
