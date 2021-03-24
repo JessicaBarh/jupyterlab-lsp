@@ -142,7 +142,7 @@
     "schemaDir": "schema",
     "outputDir": "../../python_packages/jupyterlab_lsp/jupyterlab_lsp/labextensions/@krassowski/jupyterlab-lsp",
     "_build": {
-      "load": "static/remoteEntry.3f58a66b0b8146deb9e5.js",
+      "load": "static/remoteEntry.d02a6304bd9159a6aad9.js",
       "extension": "./extension"
     }
   }
